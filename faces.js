@@ -259,34 +259,50 @@ async function ultraPreloadImages() {
     'stimuli/05F_NE_C.png', 'stimuli/41M_AN_C.png'
   ];
   
+  console.log('Starting optimized image preloading...');
+  
   const preloadPromises = imagePaths.map(async (path) => {
     return new Promise((resolve) => {
       const img = new Image();
-      img.onload = () => {
-        console.log(`Preloaded: ${path}`);
-        // Создаем временный стимул для загрузки текстуры
-        const tempStim = new visual.ImageStim({
-          win: psychoJS.window,
-          image: path,
-          size: [250, 325]
-        });
-        
-        // Форсируем загрузку текстуры
-        tempStim._texture._loadImage(tempStim._image).then(() => {
-          imageCache.set(path, tempStim._texture);
+      img.onload = async () => {
+        try {
+          console.log(`Loaded: ${path}`);
+          
+          // Создаем полноценный ImageStim для предзагрузки текстуры
+          const tempStim = new visual.ImageStim({
+            win: psychoJS.window,
+            name: `preload_${path}`,
+            image: path,
+            units: 'pix',
+            size: [250, 325],
+            interpolate: true
+          });
+          
+          // Ждем пока стимул будет готов
+          await tempStim._onLoad(true);
+          
+          // Сохраняем весь стимул в кэш, а не только текстуру
+          imageCache.set(path, tempStim);
+          console.log(`Cached: ${path}`);
           resolve();
-        }).catch(() => {
-          console.warn(`Failed to load texture: ${path}`);
+        } catch (error) {
+          console.warn(`Error caching ${path}:`, error);
           resolve(); // Продолжаем даже при ошибке
-        });
+        }
       };
+      
       img.onerror = () => {
-        console.warn(`Failed to preload: ${path}`);
+        console.warn(`Failed to load image: ${path}`);
         resolve(); // Продолжаем даже при ошибке
       };
+      
       img.src = path;
     });
   });
+  
+  await Promise.all(preloadPromises);
+  console.log(`All images preloaded. Cached: ${imageCache.size} images`);
+}
   
   await Promise.all(preloadPromises);
   console.log('All images preloaded and textures cached');
@@ -611,23 +627,25 @@ function trialRoutineBegin(snapshot) {
     routineTimer.reset();
     trialMaxDurationReached = false;
     
-    // === ВАЖНО: Используем предзагруженные текстуры ===
     const imagePath = `stimuli/${picture}`;
     const maskPath = 'face_mask/mask_28M_CA_C.png';
     
-    // Пытаемся использовать кэшированную текстуру
-    const cachedTexture = imageCache.get(imagePath);
-    if (cachedTexture) {
-      image._texture = cachedTexture;
-      image._needTextureUpdate = false;
+    // Пытаемся использовать кэшированный стимул
+    const cachedStim = imageCache.get(imagePath);
+    if (cachedStim) {
+      // Копируем свойства из кэшированного стимула
+      image._image = cachedStim._image;
+      image._texture = cachedStim._texture;
+      image._needPixiUpdate = true;
     } else {
       image.setImage(imagePath);
     }
     
-    const cachedMaskTexture = imageCache.get(maskPath);
-    if (cachedMaskTexture) {
-      image_2._texture = cachedMaskTexture;
-      image_2._needTextureUpdate = false;
+    const cachedMaskStim = imageCache.get(maskPath);
+    if (cachedMaskStim) {
+      image_2._image = cachedMaskStim._image;
+      image_2._texture = cachedMaskStim._texture;
+      image_2._needPixiUpdate = true;
     } else {
       image_2.setImage(maskPath);
     }
