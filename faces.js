@@ -307,7 +307,7 @@ async function ultraPreloadImages() {
   await Promise.all(preloadPromises);
   console.log('All images preloaded and textures cached');
 }
-
+}
 // Функция проверки аппаратного ускорения
 function checkHardwareAcceleration() {
   try {
