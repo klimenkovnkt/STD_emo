@@ -226,6 +226,7 @@ async function experimentInit() {
 // === ДОБАВИТЬ ЭТИ ФУНКЦИИ ПОСЛЕ experimentInit() ===
 
 // Функция экстремальной предзагрузки изображений
+// Функция экстремальной предзагрузки изображений
 async function ultraPreloadImages() {
   const imagePaths = [
     'face_mask/mask_28M_CA_C.png',
@@ -302,11 +303,6 @@ async function ultraPreloadImages() {
   
   await Promise.all(preloadPromises);
   console.log(`All images preloaded. Cached: ${imageCache.size} images`);
-}
-  
-  await Promise.all(preloadPromises);
-  console.log('All images preloaded and textures cached');
-}
 }
 // Функция проверки аппаратного ускорения
 function checkHardwareAcceleration() {
