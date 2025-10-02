@@ -25,14 +25,18 @@ const psychoJS = new PsychoJS({
   debug: true
 });
 
+
 // open window:
 psychoJS.openWindow({
   fullscr: true,
   color: new util.Color([1.0, 1.0, 1.0]),
   units: 'height',
-  waitBlanking: true,
-  backgroundImage: '',
-  backgroundFit: 'none',
+  waitBlanking: true, // КРИТИЧЕСКИ ВАЖНО
+  useWebGL: true,     // ВКЛЮЧИТЬ WebGL
+  contextOptions: {
+    antialias: false, // Отключить для скорости
+    depth: false
+  }
 });
 // schedule the experiment:
 psychoJS.schedule(psychoJS.gui.DlgFromDict({
@@ -86,6 +90,8 @@ psychoJS.experimentLogger.setLevel(core.Logger.ServerLevel.WARNING);
 
 var currentLoop;
 var frameDur;
+let imageCache = new Map(); // ← ДОБАВИТЬ ЭТУ СТРОКУ
+
 async function updateInfo() {
   currentLoop = psychoJS.experiment;  // right now there are no loops
   expInfo['date'] = util.MonotonicClock.getDateStr();  // add a simple timestamp
@@ -144,20 +150,14 @@ async function experimentInit() {
   
   key_resp = new core.Keyboard({psychoJS: psychoJS, clock: new util.Clock(), waitForStart: true});
   
-  // Run 'Begin Experiment' code from code_2
-  psychoJS.start({
-    expName: expName,
-    expInfo: expInfo,
-    resources: [
-      {'name': 'blocks.xlsx', 'path': 'blocks.xlsx'},
-      {'name': 'angry_f.xlsx', 'path': 'angry_f.xlsx'},
-      {'name': 'angry_m.xlsx', 'path': 'angry_m.xlsx'},
-      {'name': 'happy_f.xlsx', 'path': 'happy_f.xlsx'},
-      {'name': 'happy_m.xlsx', 'path': 'happy_m.xlsx'},
-      {'name': 'default.png', 'path': 'https://pavlovia.org/assets/default/default.png'},
-      {'name': 'face_mask/mask_28M_CA_C.png', 'path': 'face_mask/mask_28M_CA_C.png'},
-      {'name': 'stimuli/21M_NE_C.png', 'path': 'stimuli/21M_NE_C.png'}, {'name': 'stimuli/35M_NE_C.png', 'path': 'stimuli/35M_NE_C.png'}, {'name': 'stimuli/32M_HA_C.png', 'path': 'stimuli/32M_HA_C.png'}, {'name': 'stimuli/33M_AN_C.png', 'path': 'stimuli/33M_AN_C.png'}, {'name': 'stimuli/27M_AN_C.png', 'path': 'stimuli/27M_AN_C.png'}, {'name': 'stimuli/26M_HA_C.png', 'path': 'stimuli/26M_HA_C.png'}, {'name': 'stimuli/12F_AN_C.png', 'path': 'stimuli/12F_AN_C.png'}, {'name': 'stimuli/13F_HA_C.png', 'path': 'stimuli/13F_HA_C.png'}, {'name': 'stimuli/07F_HA_C.png', 'path': 'stimuli/07F_HA_C.png'}, {'name': 'stimuli/42M_NE_C.png', 'path': 'stimuli/42M_NE_C.png'}, {'name': 'stimuli/06F_AN_C.png', 'path': 'stimuli/06F_AN_C.png'}, {'name': 'stimuli/38M_NE_C.png', 'path': 'stimuli/38M_NE_C.png'}, {'name': 'stimuli/14F_NE_C.png', 'path': 'stimuli/14F_NE_C.png'}, {'name': 'stimuli/35M_AN_C.png', 'path': 'stimuli/35M_AN_C.png'}, {'name': 'stimuli/34M_HA_C.png', 'path': 'stimuli/34M_HA_C.png'}, {'name': 'stimuli/20M_HA_C.png', 'path': 'stimuli/20M_HA_C.png'}, {'name': 'stimuli/21M_AN_C.png', 'path': 'stimuli/21M_AN_C.png'}, {'name': 'stimuli/27M_NE_C.png', 'path': 'stimuli/27M_NE_C.png'}, {'name': 'stimuli/33M_NE_C.png', 'path': 'stimuli/33M_NE_C.png'}, {'name': 'stimuli/06F_NE_C.png', 'path': 'stimuli/06F_NE_C.png'}, {'name': 'stimuli/38M_AN_C.png', 'path': 'stimuli/38M_AN_C.png'}, {'name': 'stimuli/43M_HA_C.png', 'path': 'stimuli/43M_HA_C.png'}, {'name': 'stimuli/42M_AN_C.png', 'path': 'stimuli/42M_AN_C.png'}, {'name': 'stimuli/39M_HA_C.png', 'path': 'stimuli/39M_HA_C.png'}, {'name': 'stimuli/12F_NE_C.png', 'path': 'stimuli/12F_NE_C.png'}, {'name': 'stimuli/14F_AN_C.png', 'path': 'stimuli/14F_AN_C.png'}, {'name': 'stimuli/01F_HA_C.png', 'path': 'stimuli/01F_HA_C.png'}, {'name': 'stimuli/34M_NE_C.png', 'path': 'stimuli/34M_NE_C.png'}, {'name': 'stimuli/20M_NE_C.png', 'path': 'stimuli/20M_NE_C.png'}, {'name': 'stimuli/26M_AN_C.png', 'path': 'stimuli/26M_AN_C.png'}, {'name': 'stimuli/33M_HA_C.png', 'path': 'stimuli/33M_HA_C.png'}, {'name': 'stimuli/32M_AN_C.png', 'path': 'stimuli/32M_AN_C.png'}, {'name': 'stimuli/06F_HA_C.png', 'path': 'stimuli/06F_HA_C.png'}, {'name': 'stimuli/43M_NE_C.png', 'path': 'stimuli/43M_NE_C.png'}, {'name': 'stimuli/39M_NE_C.png', 'path': 'stimuli/39M_NE_C.png'}, {'name': 'stimuli/07F_AN_C.png', 'path': 'stimuli/07F_AN_C.png'}, {'name': 'stimuli/13F_AN_C.png', 'path': 'stimuli/13F_AN_C.png'}, {'name': 'stimuli/12F_HA_C.png', 'path': 'stimuli/12F_HA_C.png'}, {'name': 'stimuli/01F_NE_C.png', 'path': 'stimuli/01F_NE_C.png'}, {'name': 'stimuli/21M_HA_C.png', 'path': 'stimuli/21M_HA_C.png'}, {'name': 'stimuli/20M_AN_C.png', 'path': 'stimuli/20M_AN_C.png'}, {'name': 'stimuli/34M_AN_C.png', 'path': 'stimuli/34M_AN_C.png'}, {'name': 'stimuli/35M_HA_C.png', 'path': 'stimuli/35M_HA_C.png'}, {'name': 'stimuli/32M_NE_C.png', 'path': 'stimuli/32M_NE_C.png'}, {'name': 'stimuli/26M_NE_C.png', 'path': 'stimuli/26M_NE_C.png'}, {'name': 'stimuli/13F_NE_C.png', 'path': 'stimuli/13F_NE_C.png'}, {'name': 'stimuli/39M_AN_C.png', 'path': 'stimuli/39M_AN_C.png'}, {'name': 'stimuli/07F_NE_C.png', 'path': 'stimuli/07F_NE_C.png'}, {'name': 'stimuli/42M_HA_C.png', 'path': 'stimuli/42M_HA_C.png'}, {'name': 'stimuli/43M_AN_C.png', 'path': 'stimuli/43M_AN_C.png'}, {'name': 'stimuli/38M_HA_C.png', 'path': 'stimuli/38M_HA_C.png'}, {'name': 'stimuli/01f_an_c.png', 'path': 'stimuli/01f_an_c.png'}, {'name': 'stimuli/14F_HA_C.png', 'path': 'stimuli/14F_HA_C.png'}, {'name': 'stimuli/30M_HA_C.png', 'path': 'stimuli/30M_HA_C.png'}, {'name': 'stimuli/31M_AN_C.png', 'path': 'stimuli/31M_AN_C.png'}, {'name': 'stimuli/25M_AN_C.png', 'path': 'stimuli/25M_AN_C.png'}, {'name': 'stimuli/24M_HA_C.png', 'path': 'stimuli/24M_HA_C.png'}, {'name': 'stimuli/23M_NE_C.png', 'path': 'stimuli/23M_NE_C.png'}, {'name': 'stimuli/08F_HA_C.png', 'path': 'stimuli/08F_HA_C.png'}, {'name': 'stimuli/37M_NE_C.png', 'path': 'stimuli/37M_NE_C.png'}, {'name': 'stimuli/09F_AN_C.png', 'path': 'stimuli/09F_AN_C.png'}, {'name': 'stimuli/02F_NE_C.png', 'path': 'stimuli/02F_NE_C.png'}, {'name': 'stimuli/28M_AN_C.png', 'path': 'stimuli/28M_AN_C.png'}, {'name': 'stimuli/29M_HA_C.png', 'path': 'stimuli/29M_HA_C.png'}, {'name': 'stimuli/10F_AN_C.png', 'path': 'stimuli/10F_AN_C.png'}, {'name': 'stimuli/11F_HA_C.png', 'path': 'stimuli/11F_HA_C.png'}, {'name': 'stimuli/40M_NE_C.png', 'path': 'stimuli/40M_NE_C.png'}, {'name': 'stimuli/05F_HA_C.png', 'path': 'stimuli/05F_HA_C.png'}, {'name': 'stimuli/25M_NE_C.png', 'path': 'stimuli/25M_NE_C.png'}, {'name': 'stimuli/31M_NE_C.png', 'path': 'stimuli/31M_NE_C.png'}, {'name': 'stimuli/37M_AN_C.png', 'path': 'stimuli/37M_AN_C.png'}, {'name': 'stimuli/09F_NE_C.png', 'path': 'stimuli/09F_NE_C.png'}, {'name': 'stimuli/36M_HA_C.png', 'path': 'stimuli/36M_HA_C.png'}, {'name': 'stimuli/22M_HA_C.png', 'path': 'stimuli/22M_HA_C.png'}, {'name': 'stimuli/23M_AN_C.png', 'path': 'stimuli/23M_AN_C.png'}, {'name': 'stimuli/28M_NE_C.png', 'path': 'stimuli/28M_NE_C.png'}, {'name': 'stimuli/02f_an_c.png', 'path': 'stimuli/02f_an_c.png'}, {'name': 'stimuli/03F_HA_C.png', 'path': 'stimuli/03F_HA_C.png'}, {'name': 'stimuli/41M_HA_C.png', 'path': 'stimuli/41M_HA_C.png'}, {'name': 'stimuli/40M_AN_C.png', 'path': 'stimuli/40M_AN_C.png'}, {'name': 'stimuli/10F_NE_C.png', 'path': 'stimuli/10F_NE_C.png'}, {'name': 'stimuli/24M_AN_C.png', 'path': 'stimuli/24M_AN_C.png'}, {'name': 'stimuli/25M_HA_C.png', 'path': 'stimuli/25M_HA_C.png'}, {'name': 'stimuli/31M_HA_C.png', 'path': 'stimuli/31M_HA_C.png'}, {'name': 'stimuli/30M_AN_C.png', 'path': 'stimuli/30M_AN_C.png'}, {'name': 'stimuli/09F_HA_C.png', 'path': 'stimuli/09F_HA_C.png'}, {'name': 'stimuli/08F_AN_C.png', 'path': 'stimuli/08F_AN_C.png'}, {'name': 'stimuli/36M_NE_C.png', 'path': 'stimuli/36M_NE_C.png'}, {'name': 'stimuli/22M_NE_C.png', 'path': 'stimuli/22M_NE_C.png'}, {'name': 'stimuli/29M_AN_C.png', 'path': 'stimuli/29M_AN_C.png'}, {'name': 'stimuli/28M_HA_C.png', 'path': 'stimuli/28M_HA_C.png'}, {'name': 'stimuli/03F_NE_C.png', 'path': 'stimuli/03F_NE_C.png'}, {'name': 'stimuli/41M_NE_C.png', 'path': 'stimuli/41M_NE_C.png'}, {'name': 'stimuli/05F_AN_C.png', 'path': 'stimuli/05F_AN_C.png'}, {'name': 'stimuli/11F_AN_C.png', 'path': 'stimuli/11F_AN_C.png'}, {'name': 'stimuli/10F_HA_C.png', 'path': 'stimuli/10F_HA_C.png'}, {'name': 'stimuli/30M_NE_C.png', 'path': 'stimuli/30M_NE_C.png'}, {'name': 'stimuli/24M_NE_C.png', 'path': 'stimuli/24M_NE_C.png'}, {'name': 'stimuli/23M_HA_C.png', 'path': 'stimuli/23M_HA_C.png'}, {'name': 'stimuli/22M_AN_C.png', 'path': 'stimuli/22M_AN_C.png'}, {'name': 'stimuli/08F_NE_C.png', 'path': 'stimuli/08F_NE_C.png'}, {'name': 'stimuli/36M_AN_C.png', 'path': 'stimuli/36M_AN_C.png'}, {'name': 'stimuli/37M_HA_C.png', 'path': 'stimuli/37M_HA_C.png'}, {'name': 'stimuli/03F_AN_C.png', 'path': 'stimuli/03F_AN_C.png'}, {'name': 'stimuli/02F_HA_C.png', 'path': 'stimuli/02F_HA_C.png'}, {'name': 'stimuli/29M_NE_C.png', 'path': 'stimuli/29M_NE_C.png'}, {'name': 'stimuli/11F_NE_C.png', 'path': 'stimuli/11F_NE_C.png'}, {'name': 'stimuli/40M_HA_C.png', 'path': 'stimuli/40M_HA_C.png'}, {'name': 'stimuli/05F_NE_C.png', 'path': 'stimuli/05F_NE_C.png'}, {'name': 'stimuli/41M_AN_C.png', 'path': 'stimuli/41M_AN_C.png'}
-  ]});
+  // === ВАЖНО: ПРЕДЗАГРУЗКА ИЗОБРАЖЕНИЙ ===
+  console.log('Starting image preloading...');
+  await ultraPreloadImages();
+  console.log('Image preloading completed!');
+  
+  // Проверка аппаратного ускорения
+  checkHardwareAcceleration();
+  
   // Initialize components for Routine "trial"
   trialClock = new util.Clock();
   image = new visual.ImageStim({
@@ -186,6 +186,7 @@ async function experimentInit() {
     flipHoriz : false, flipVert : false,
     texRes : 128.0, interpolate : true, depth : -1.0 
   });
+  
   // Initialize components for Routine "ans"
   ansClock = new util.Clock();
   text = new visual.TextStim({
@@ -222,7 +223,97 @@ async function experimentInit() {
   
   return Scheduler.Event.NEXT;
 }
+// === ДОБАВИТЬ ЭТИ ФУНКЦИИ ПОСЛЕ experimentInit() ===
 
+// Функция экстремальной предзагрузки изображений
+async function ultraPreloadImages() {
+  const imagePaths = [
+    'face_mask/mask_28M_CA_C.png',
+    'stimuli/21M_NE_C.png', 'stimuli/35M_NE_C.png', 'stimuli/32M_HA_C.png', 'stimuli/33M_AN_C.png', 
+    'stimuli/27M_AN_C.png', 'stimuli/26M_HA_C.png', 'stimuli/12F_AN_C.png', 'stimuli/13F_HA_C.png',
+    'stimuli/07F_HA_C.png', 'stimuli/42M_NE_C.png', 'stimuli/06F_AN_C.png', 'stimuli/38M_NE_C.png',
+    'stimuli/14F_NE_C.png', 'stimuli/35M_AN_C.png', 'stimuli/34M_HA_C.png', 'stimuli/20M_HA_C.png',
+    'stimuli/21M_AN_C.png', 'stimuli/27M_NE_C.png', 'stimuli/33M_NE_C.png', 'stimuli/06F_NE_C.png',
+    'stimuli/38M_AN_C.png', 'stimuli/43M_HA_C.png', 'stimuli/42M_AN_C.png', 'stimuli/39M_HA_C.png',
+    'stimuli/12F_NE_C.png', 'stimuli/14F_AN_C.png', 'stimuli/01F_HA_C.png', 'stimuli/34M_NE_C.png',
+    'stimuli/20M_NE_C.png', 'stimuli/26M_AN_C.png', 'stimuli/33M_HA_C.png', 'stimuli/32M_AN_C.png',
+    'stimuli/06F_HA_C.png', 'stimuli/43M_NE_C.png', 'stimuli/39M_NE_C.png', 'stimuli/07F_AN_C.png',
+    'stimuli/13F_AN_C.png', 'stimuli/12F_HA_C.png', 'stimuli/01F_NE_C.png', 'stimuli/21M_HA_C.png',
+    'stimuli/20M_AN_C.png', 'stimuli/34M_AN_C.png', 'stimuli/35M_HA_C.png', 'stimuli/32M_NE_C.png',
+    'stimuli/26M_NE_C.png', 'stimuli/13F_NE_C.png', 'stimuli/39M_AN_C.png', 'stimuli/07F_NE_C.png',
+    'stimuli/42M_HA_C.png', 'stimuli/43M_AN_C.png', 'stimuli/38M_HA_C.png', 'stimuli/01f_an_c.png',
+    'stimuli/14F_HA_C.png', 'stimuli/30M_HA_C.png', 'stimuli/31M_AN_C.png', 'stimuli/25M_AN_C.png',
+    'stimuli/24M_HA_C.png', 'stimuli/23M_NE_C.png', 'stimuli/08F_HA_C.png', 'stimuli/37M_NE_C.png',
+    'stimuli/09F_AN_C.png', 'stimuli/02F_NE_C.png', 'stimuli/28M_AN_C.png', 'stimuli/29M_HA_C.png',
+    'stimuli/10F_AN_C.png', 'stimuli/11F_HA_C.png', 'stimuli/40M_NE_C.png', 'stimuli/05F_HA_C.png',
+    'stimuli/25M_NE_C.png', 'stimuli/31M_NE_C.png', 'stimuli/37M_AN_C.png', 'stimuli/09F_NE_C.png',
+    'stimuli/36M_HA_C.png', 'stimuli/22M_HA_C.png', 'stimuli/23M_AN_C.png', 'stimuli/28M_NE_C.png',
+    'stimuli/02f_an_c.png', 'stimuli/03F_HA_C.png', 'stimuli/41M_HA_C.png', 'stimuli/40M_AN_C.png',
+    'stimuli/10F_NE_C.png', 'stimuli/24M_AN_C.png', 'stimuli/25M_HA_C.png', 'stimuli/31M_HA_C.png',
+    'stimuli/30M_AN_C.png', 'stimuli/09F_HA_C.png', 'stimuli/08F_AN_C.png', 'stimuli/36M_NE_C.png',
+    'stimuli/22M_NE_C.png', 'stimuli/29M_AN_C.png', 'stimuli/28M_HA_C.png', 'stimuli/03F_NE_C.png',
+    'stimuli/41M_NE_C.png', 'stimuli/05F_AN_C.png', 'stimuli/11F_AN_C.png', 'stimuli/10F_HA_C.png',
+    'stimuli/30M_NE_C.png', 'stimuli/24M_NE_C.png', 'stimuli/23M_HA_C.png', 'stimuli/22M_AN_C.png',
+    'stimuli/08F_NE_C.png', 'stimuli/36M_AN_C.png', 'stimuli/37M_HA_C.png', 'stimuli/03F_AN_C.png',
+    'stimuli/02F_HA_C.png', 'stimuli/29M_NE_C.png', 'stimuli/11F_NE_C.png', 'stimuli/40M_HA_C.png',
+    'stimuli/05F_NE_C.png', 'stimuli/41M_AN_C.png'
+  ];
+  
+  const preloadPromises = imagePaths.map(async (path) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        console.log(`Preloaded: ${path}`);
+        // Создаем временный стимул для загрузки текстуры
+        const tempStim = new visual.ImageStim({
+          win: psychoJS.window,
+          image: path,
+          size: [250, 325]
+        });
+        
+        // Форсируем загрузку текстуры
+        tempStim._texture._loadImage(tempStim._image).then(() => {
+          imageCache.set(path, tempStim._texture);
+          resolve();
+        }).catch(() => {
+          console.warn(`Failed to load texture: ${path}`);
+          resolve(); // Продолжаем даже при ошибке
+        });
+      };
+      img.onerror = () => {
+        console.warn(`Failed to preload: ${path}`);
+        resolve(); // Продолжаем даже при ошибке
+      };
+      img.src = path;
+    });
+  });
+  
+  await Promise.all(preloadPromises);
+  console.log('All images preloaded and textures cached');
+}
+
+// Функция проверки аппаратного ускорения
+function checkHardwareAcceleration() {
+  try {
+    const canvas = psychoJS.window.canvas;
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    
+    if (gl) {
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (debugInfo) {
+        const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        console.log('WebGL Renderer:', renderer);
+        psychoJS.experiment.addData('webgl_renderer', renderer);
+        
+        if (renderer.includes('Software') || renderer.includes('SwiftShader')) {
+          console.warn('SOFTWARE RENDERING DETECTED! 1-frame stimuli may not work reliably.');
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Could not check WebGL renderer:', error);
+  }
+}
 
 var t;
 var frameN;
@@ -519,10 +610,32 @@ function trialRoutineBegin(snapshot) {
     trialClock.reset();
     routineTimer.reset();
     trialMaxDurationReached = false;
-    // update component parameters for each repeat
-    image.setImage(`stimuli/${picture}`);
-    image_2.setImage('face_mask/mask_28M_CA_C.png');
+    
+    // === ВАЖНО: Используем предзагруженные текстуры ===
+    const imagePath = `stimuli/${picture}`;
+    const maskPath = 'face_mask/mask_28M_CA_C.png';
+    
+    // Пытаемся использовать кэшированную текстуру
+    const cachedTexture = imageCache.get(imagePath);
+    if (cachedTexture) {
+      image._texture = cachedTexture;
+      image._needTextureUpdate = false;
+    } else {
+      image.setImage(imagePath);
+    }
+    
+    const cachedMaskTexture = imageCache.get(maskPath);
+    if (cachedMaskTexture) {
+      image_2._texture = cachedMaskTexture;
+      image_2._needTextureUpdate = false;
+    } else {
+      image_2.setImage(maskPath);
+    }
+    
     psychoJS.experiment.addData('trial.started', globalClock.getTime());
+    psychoJS.experiment.addData('stimulus_duration_frames', duration);
+    psychoJS.experiment.addData('stimulus_file', picture);
+    
     trialMaxDuration = null
     // keep track of which components have finished
     trialComponents = [];
@@ -543,52 +656,32 @@ function trialRoutineEachFrame() {
     // get current time
     t = trialClock.getTime();
     frameN = frameN + 1;// number of completed frames (so 0 is the first frame)
-    // update/draw components on each frame
     
-    // *image* updates
-    if (frameN >= 30 && image.status === PsychoJS.Status.NOT_STARTED) {
-      // keep track of start time/frame for later
-      image.tStart = t;  // (not accounting for frame time here)
-      image.frameNStart = frameN;  // exact frame index
-      
-      image.setAutoDraw(true);
+    // === ВАЖНО: Оптимизированный рендеринг для 1-3 фреймов ===
+    
+    // Стимул появляется на фрейме 30
+    if (frameN === 30 && image.status === PsychoJS.Status.NOT_STARTED) {
+      psychoJS.window.callOnFlip(() => {
+        image.setAutoDraw(true);
+      });
     }
     
-    
-    // if image is active this frame...
-    if (image.status === PsychoJS.Status.STARTED) {
+    // Стимул исчезает через заданное количество фреймов (1, 2, или 3)
+    if (frameN === 30 + duration && image.status === PsychoJS.Status.STARTED) {
+      psychoJS.window.callOnFlip(() => {
+        image.setAutoDraw(false);
+      });
     }
     
-    if (image.status === PsychoJS.Status.STARTED && frameN >= (image.frameNStart + duration)) {
-      // keep track of stop time/frame for later
-      image.tStop = t;  // not accounting for scr refresh
-      image.frameNStop = frameN;  // exact frame index
-      // update status
-      image.status = PsychoJS.Status.FINISHED;
-      image.setAutoDraw(false);
+    // Маска появляется сразу после стимула
+    if (frameN === 30 + duration && image_2.status === PsychoJS.Status.NOT_STARTED) {
+      psychoJS.window.callOnFlip(() => {
+        image_2.setAutoDraw(true);
+      });
     }
     
-    
-    // *image_2* updates
-    if (frameN >= Number.parseInt((duration + 30)) && image_2.status === PsychoJS.Status.NOT_STARTED) {
-      // keep track of start time/frame for later
-      image_2.tStart = t;  // (not accounting for frame time here)
-      image_2.frameNStart = frameN;  // exact frame index
-      
-      image_2.setAutoDraw(true);
-    }
-    
-    
-    // if image_2 is active this frame...
-    if (image_2.status === PsychoJS.Status.STARTED) {
-    }
-    
-    if (image_2.status === PsychoJS.Status.STARTED && frameN >= (image_2.frameNStart + Number.parseInt(((duration + 30) + 30)))) {
-      // keep track of stop time/frame for later
-      image_2.tStop = t;  // not accounting for scr refresh
-      image_2.frameNStop = frameN;  // exact frame index
-      // update status
-      image_2.status = PsychoJS.Status.FINISHED;
+    // Маска исчезает через 30 фреймов
+    if (frameN === 30 + duration + 30 && image_2.status === PsychoJS.Status.STARTED) {
       image_2.setAutoDraw(false);
     }
     
