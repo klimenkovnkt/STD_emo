@@ -484,7 +484,7 @@ function trials_2LoopBegin(trials_2LoopScheduler, snapshot) {
     // set up handler to look after randomisation of conditions etc
     trials_2 = new TrialHandler({
       psychoJS: psychoJS,
-      nReps: 1, method: TrialHandler.Method.RANDOM,
+      nReps: 1, method: TrialHandler.Method.SEQUENTIAL,
       extraInfo: expInfo, originPath: undefined,
       trialList: 'blocks.xlsx',
       seed: undefined, name: 'trials_2'
