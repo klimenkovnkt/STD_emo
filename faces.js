@@ -99,7 +99,7 @@ psychoJS.start({
 
 psychoJS.experimentLogger.setLevel(core.Logger.ServerLevel.WARNING);
 
-
+let currentLoop;
 var currentLoop;
 var frameDur;
 let imageCache = new Map(); // ← ДОБАВИТЬ ЭТУ СТРОКУ
