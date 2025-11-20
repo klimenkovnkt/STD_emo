@@ -927,7 +927,7 @@ function byeRoutineBegin(snapshot) {
     psychoJS._saveResults = 0;
     
     // Generate filename for results
-    let filename = psychoJS._experiment._experimentName + '_' + psychoJS._experiment._datetime + '.csv';
+    let filename = psychoJS.experiment.dataFileName + '.csv';
     // Extract data object from experiment
     let dataObj = psychoJS._experiment._trialsData;
     // Convert data object to CSV
@@ -943,7 +943,7 @@ function byeRoutineBegin(snapshot) {
             Accept: '*/*',
          },   
          body: JSON.stringify({
-            experimentID: '1aALn2OO9S9P', // * UPDATE WITH YOUR DATAPIPE EXPERIMENT ID *
+            experimentID: 'CkP8cC35CuzK', // * UPDATE WITH YOUR DATAPIPE EXPERIMENT ID *
             filename: filename, 
             data: data,
          }),
